@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HR Policy Assistant — Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:    #0f1f3d;
+      --accent:  #2e7cf6;
+      --surface: #ffffff;
+      --muted:   #f4f6fb;
+      --border:  #e2e8f0;
+      --text:    #1e293b;
+      --soft:    #64748b;
+      --error:   #ef4444;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--navy);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: 20px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.3);
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo-mark {
+      width: 56px; height: 56px;
+      background: var(--accent);
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      font-size: 26px;
+      margin: 0 auto 16px;
+    }
+
+    .logo h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.5rem;
+      color: var(--navy);
+    }
+
+    .logo p {
+      font-size: .82rem;
+      color: var(--soft);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .95rem;
+      color: var(--text);
+      background: var(--muted);
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    input:focus { border-color: var(--accent); background: white; }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all .2s;
+    }
+
+    .btn:hover:not(:disabled) { background: #1a6aed; transform: translateY(-1px); }
+    .btn:disabled { background: var(--border); cursor: not-allowed; }
+
+    .error-box {
+      background: #fff5f5;
+      border: 1px solid #fecaca;
+      color: var(--error);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: .85rem;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .footer-note {
+      text-align: center;
+      font-size: .75rem;
+      color: var(--soft);
+      margin-top: 24px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">
+    <div class="logo-mark">🏢</div>
+    <h1>HR Policy Assistant</h1>
+    <p>Employee Portal — trax-ai.org</p>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <div class="form-group">
+    <label>Employee Code</label>
+    <input type="text" id="empCode" placeholder="e.g. EMP001" autocomplete="username"/>
+  </div>
+
+  <div class="form-group">
+    <label>Password</label>
+    <input type="password" id="password" placeholder="Enter your password"
+           autocomplete="current-password"
+           onkeydown="if(event.key==='Enter') doLogin()"/>
+  </div>
+
+  <button class="btn" id="loginBtn" onclick="doLogin()">Sign In</button>
+
+  <p class="footer-note">Access restricted to company employees only</p>
+</div>
+
+<script>
+  const API_URL = "https://hr-api.trax-ai.org";
+
+  // If already logged in, go straight to chat
+  if (localStorage.getItem("hr_token")) {
+    window.location.href = "index.html";
+  }
+
+  async function doLogin() {
+    const empCode  = document.getElementById("empCode").value.trim();
+    const password = document.getElementById("password").value;
+    const btn      = document.getElementById("loginBtn");
+    const errorBox = document.getElementById("errorBox");
+
+    if (!empCode || !password) {
+      showError("Please enter your employee code and password.");
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Signing in...";
+    errorBox.style.display = "none";
+
+    try {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ employee_code: empCode, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showError(data.detail || "Login failed. Please try again.");
+        return;
+      }
+
+      // Save token and employee info
+      localStorage.setItem("hr_token",    data.token);
+      localStorage.setItem("hr_name",     data.employee_name);
+      localStorage.setItem("hr_code",     data.employee_code);
+      localStorage.setItem("hr_dept",     data.department);
+
+      // Go to chat
+      window.location.href = "index.html";
+
+    } catch (err) {
+      showError("Cannot connect to server. Please try again.");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Sign In";
+    }
+  }
+
+  function showError(msg) {
+    const box = document.getElementById("errorBox");
+    box.textContent = "⚠️ " + msg;
+    box.style.display = "block";
+  }
+</script>
+</body>
+</html>

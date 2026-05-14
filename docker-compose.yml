@@ -1,0 +1,47 @@
+services:
+
+  sqlserver-prod:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: hr-sqlserver-prod
+    restart: always
+    ports:
+      - "1433:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=ProdPassword123!
+      - MSSQL_PID=Express
+    volumes:
+      - sqlserver_prod_data:/var/opt/mssql
+    networks:
+      - hr-network
+
+  policy-backend:
+    build: ./backend
+    container_name: policy-backend
+    restart: always
+    ports:
+      - "8050:8050"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - sqlserver-prod
+    networks:
+      - hr-network
+
+  policy-frontend:
+    image: nginx:alpine
+    container_name: policy-frontend
+    restart: always
+    ports:
+      - "5500:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    networks:
+      - hr-network
+
+volumes:
+  sqlserver_prod_data:
+
+networks:
+  hr-network:
+    driver: bridge

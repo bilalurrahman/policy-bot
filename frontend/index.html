@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HR Policy Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:      #0f1f3d;
+      --accent:    #2e7cf6;
+      --accent-lt: #e8f0fe;
+      --surface:   #ffffff;
+      --muted:     #f4f6fb;
+      --border:    #e2e8f0;
+      --text:      #1e293b;
+      --soft:      #64748b;
+      --green:     #10b981;
+      --radius:    14px;
+    }
+
+    html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--muted); }
+
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      grid-template-rows: 68px 1fr;
+      height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      grid-column: 1 / -1;
+      background: var(--navy);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 0 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.2);
+      z-index: 10;
+    }
+
+    .logo-mark {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: grid; place-items: center;
+      font-size: 17px; flex-shrink: 0;
+    }
+
+    header h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.1rem; color: white;
+    }
+
+    header p { font-size: .72rem; color: rgba(255,255,255,.5); margin-top: 1px; }
+
+    .header-right {
+      margin-left: auto;
+      display: flex; align-items: center; gap: 12px;
+    }
+
+    .employee-badge {
+      background: rgba(255,255,255,.1);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: .8rem;
+      color: rgba(255,255,255,.85);
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    .logout-btn {
+      background: rgba(255,255,255,.1);
+      border: none; color: rgba(255,255,255,.7);
+      padding: 6px 14px; border-radius: 20px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .8rem; cursor: pointer;
+      transition: all .2s;
+    }
+    .logout-btn:hover { background: rgba(255,255,255,.2); color: white; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 20px 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .sidebar-title {
+      font-size: .72rem;
+      font-weight: 600;
+      color: var(--soft);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      padding: 0 4px;
+    }
+
+    /* Leave Balance Cards */
+    .balance-card {
+      background: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .balance-card .leave-type {
+      font-size: .78rem;
+      font-weight: 600;
+      color: var(--soft);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin-bottom: 8px;
+    }
+
+    .balance-numbers {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .remaining-days {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--navy);
+      line-height: 1;
+    }
+
+    .remaining-days span {
+      font-size: .78rem;
+      font-weight: 400;
+      color: var(--soft);
+    }
+
+    .taken-info {
+      font-size: .75rem;
+      color: var(--soft);
+      text-align: right;
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 4px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 4px;
+      transition: width .5s ease;
+    }
+
+    .progress-fill.warning { background: #f59e0b; }
+    .progress-fill.danger  { background: #ef4444; }
+
+    /* Quick Questions */
+    .quick-btn {
+      width: 100%;
+      padding: 9px 12px;
+      background: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .82rem;
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+      transition: all .2s;
+    }
+    .quick-btn:hover { background: var(--accent-lt); border-color: #c5d9fc; color: var(--accent); }
+
+    /* ── CHAT AREA ── */
+    .chat-area {
+      display: grid;
+      grid-template-rows: 1fr auto;
+      overflow: hidden;
+    }
+
+    .messages {
+      overflow-y: auto;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .welcome-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    .welcome-card h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.25rem;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+
+    .welcome-card p { color: var(--soft); font-size: .88rem; line-height: 1.6; }
+
+    .message { display: flex; gap: 10px; animation: fadeUp .3s ease; }
+    .message.user { flex-direction: row-reverse; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .avatar {
+      width: 34px; height: 34px;
+      border-radius: 10px;
+      display: grid; place-items: center;
+      font-size: 14px; flex-shrink: 0;
+      align-self: flex-end;
+    }
+
+    .message.bot  .avatar { background: var(--navy); }
+    .message.user .avatar { background: var(--accent); }
+
+    .bubble-wrap { max-width: 78%; display: flex; flex-direction: column; gap: 5px; }
+    .message.user .bubble-wrap { align-items: flex-end; }
+
+    .bubble {
+      padding: 13px 16px;
+      border-radius: var(--radius);
+      font-size: .88rem;
+      line-height: 1.65;
+    }
+
+    .message.bot  .bubble {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+
+    .message.user .bubble {
+      background: var(--accent);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.bot .bubble ul { margin: 8px 0 8px 8px; padding-left: 16px; display: flex; flex-direction: column; gap: 5px; }
+    .message.bot .bubble li { line-height: 1.6; }
+    .message.bot .bubble strong { color: var(--navy); font-weight: 600; }
+
+    /* Personal query badge */
+    .query-badge {
+      font-size: .7rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      width: fit-content;
+    }
+    .query-badge.personal { background: #d1fae5; color: #065f46; }
+    .query-badge.policy   { background: var(--accent-lt); color: var(--accent); }
+    .query-badge.combined { background: #fef3c7; color: #92400e; }
+
+    .source-tag {
+      font-size: .7rem;
+      background: var(--accent-lt);
+      color: var(--accent);
+      border: 1px solid #c5d9fc;
+      padding: 2px 8px; border-radius: 20px;
+      display: inline-flex; align-items: center; gap: 3px;
+    }
+
+    .sources { display: flex; flex-wrap: wrap; gap: 4px; }
+
+    /* Typing */
+    .typing-bubble {
+      display: flex; align-items: center; gap: 5px;
+      padding: 13px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      border-bottom-left-radius: 4px;
+      width: fit-content;
+    }
+
+    .dot {
+      width: 7px; height: 7px;
+      background: var(--soft); border-radius: 50%;
+      animation: bounce .9s ease-in-out infinite;
+    }
+    .dot:nth-child(2) { animation-delay: .15s; }
+    .dot:nth-child(3) { animation-delay: .30s; }
+
+    @keyframes bounce {
+      0%,80%,100% { transform: scale(.8); opacity: .5; }
+      40%          { transform: scale(1.2); opacity: 1; }
+    }
+
+    /* ── INPUT ── */
+    .input-area {
+      padding: 14px 20px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+    }
+
+    .input-row {
+      display: flex; gap: 10px; align-items: flex-end;
+      background: var(--muted);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      transition: border-color .2s;
+    }
+    .input-row:focus-within { border-color: var(--accent); }
+
+    textarea {
+      flex: 1; border: none; background: transparent;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .9rem; color: var(--text);
+      resize: none; outline: none;
+      max-height: 120px; min-height: 24px; line-height: 1.5;
+    }
+
+    textarea::placeholder { color: var(--soft); }
+
+    .send-btn {
+      width: 36px; height: 36px;
+      background: var(--accent); border: none;
+      border-radius: 10px; cursor: pointer;
+      display: grid; place-items: center; flex-shrink: 0;
+      transition: all .2s;
+    }
+    .send-btn:hover:not(:disabled) { background: #1a6aed; transform: scale(1.05); }
+    .send-btn:disabled { background: var(--border); cursor: not-allowed; }
+    .send-btn svg { width: 15px; height: 15px; fill: white; }
+
+    .input-hint { font-size: .72rem; color: var(--soft); text-align: center; margin-top: 7px; }
+
+    .messages::-webkit-scrollbar { width: 5px; }
+    .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo-mark">🏢</div>
+    <div>
+      <h1>HR Policy Assistant</h1>
+      <p>trax-ai.org — Company Knowledge Base</p>
+    </div>
+    <div class="header-right">
+      <div class="employee-badge">👤 <span id="empName">Loading...</span></div>
+      <button class="logout-btn" onclick="logout()">Sign Out</button>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-title">My Leave Balance</div>
+    <div id="leaveBalances">
+      <div style="color:var(--soft);font-size:.82rem;padding:8px 4px">Loading balances...</div>
+    </div>
+
+    <div class="sidebar-title" style="margin-top:8px">Quick Questions</div>
+    <button class="quick-btn" onclick="ask('How many annual leave days do I have remaining this year?')">🏖️ My remaining annual leave</button>
+    <button class="quick-btn" onclick="ask('What is my sick leave balance?')">🤒 My sick leave balance</button>
+    <button class="quick-btn" onclick="ask('What are the working hours?')">🕐 Working hours</button>
+    <button class="quick-btn" onclick="ask('What is the remote work policy?')">🏠 Remote work policy</button>
+    <button class="quick-btn" onclick="ask('What is the expense reimbursement process?')">💰 Expense claims</button>
+    <button class="quick-btn" onclick="ask('Can I carry forward unused leave?')">📅 Leave carry forward</button>
+  </div>
+
+  <!-- CHAT AREA -->
+  <div class="chat-area">
+    <div class="messages" id="messages">
+      <div class="welcome-card">
+        <h2 id="welcomeMsg">Welcome! 👋</h2>
+        <p>Ask me anything about company policies, or ask about your personal leave balance and history. I have access to both your records and company policy documents.</p>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="input-row">
+        <textarea id="questionInput" placeholder="Ask about policies or your leave balance..."
+          rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendQuestion()">
+          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
+      <p class="input-hint">Answers based on company policies and your personal HR records</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const API_URL = "https://hr-api.trax-ai.org";
+  const history = [];
+
+  // ── AUTH CHECK ─────────────────────────────
+  const token = localStorage.getItem("hr_token");
+  if (!token) window.location.href = "login.html";
+
+  const empName = localStorage.getItem("hr_name") || "Employee";
+  const empDept = localStorage.getItem("hr_dept") || "";
+  document.getElementById("empName").textContent = empName;
+  document.getElementById("welcomeMsg").textContent = `Welcome, ${empName.split(" ")[0]}! 👋`;
+
+  // ── LOAD LEAVE BALANCES ────────────────────
+  async function loadLeaveBalances() {
+    try {
+      const res = await fetch(`${API_URL}/api/my/leave-balance`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+
+      if (res.status === 401) { logout(); return; }
+
+      const data = await res.json();
+      renderBalances(data.balances);
+    } catch (err) {
+      document.getElementById("leaveBalances").innerHTML =
+        `<div style="color:var(--soft);font-size:.8rem;padding:4px">Unable to load balances</div>`;
+    }
+  }
+
+  function renderBalances(balances) {
+    if (!balances || balances.length === 0) {
+      document.getElementById("leaveBalances").innerHTML =
+        `<div style="color:var(--soft);font-size:.8rem;padding:4px">No balance data found</div>`;
+      return;
+    }
+
+    const html = balances.map(b => {
+      const usedPct = Math.round((b.taken / b.total_allowed) * 100);
+      const fillClass = usedPct > 80 ? "danger" : usedPct > 60 ? "warning" : "";
+
+      return `
+        <div class="balance-card">
+          <div class="leave-type">${b.type} Leave</div>
+          <div class="balance-numbers">
+            <div class="remaining-days">${b.remaining}<span> days left</span></div>
+            <div class="taken-info">${b.taken} taken<br>of ${b.total_allowed}</div>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill ${fillClass}" style="width:${usedPct}%"></div>
+          </div>
+        </div>`;
+    }).join("");
+
+    document.getElementById("leaveBalances").innerHTML = html;
+  }
+
+  loadLeaveBalances();
+
+  // ── LOGOUT ─────────────────────────────────
+  function logout() {
+    localStorage.removeItem("hr_token");
+    localStorage.removeItem("hr_name");
+    localStorage.removeItem("hr_code");
+    localStorage.removeItem("hr_dept");
+    window.location.href = "login.html";
+  }
+
+  // ── MESSAGE FORMATTING ─────────────────────
+  function formatMessage(text) {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+      .replace(/^\s*[\*\-]\s+(.+)/gm, "<li>$1</li>")
+      .replace(/(<li>.*?<\/li>(\n|$))+/gs, m => `<ul>${m}</ul>`)
+      .replace(/(?<!<\/li>|<\/ul>)\n(?!<li>|<ul>)/g, "<br>")
+      .replace(/\[(\d+)\]/g, `<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;background:var(--accent);color:white;border-radius:50%;font-size:9px;font-weight:600;margin:0 2px;vertical-align:middle;">$1</span>`);
+  }
+
+  // ── ADD MESSAGE ────────────────────────────
+  function addMessage(text, role, sources = [], queryType = "") {
+    const messagesDiv = document.getElementById("messages");
+    const wrapper = document.createElement("div");
+    wrapper.className = `message ${role}`;
+
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.textContent = role === "bot" ? "🤖" : "👤";
+
+    const bubbleWrap = document.createElement("div");
+    bubbleWrap.className = "bubble-wrap";
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.innerHTML = formatMessage(text);
+    bubbleWrap.appendChild(bubble);
+
+    // Show query type badge for bot messages
+    if (role === "bot" && queryType) {
+      const badge = document.createElement("span");
+      badge.className = `query-badge ${queryType}`;
+      const labels = { personal: "📊 From your records", policy: "📋 From policy", combined: "📊📋 Records + Policy" };
+      badge.textContent = labels[queryType] || queryType;
+      bubbleWrap.appendChild(badge);
+    }
+
+    // Show sources
+    if (sources.length > 0) {
+      const srcRow = document.createElement("div");
+      srcRow.className = "sources";
+      sources.forEach(s => {
+        const tag = document.createElement("span");
+        tag.className = "source-tag";
+        tag.innerHTML = `📎 ${s}`;
+        srcRow.appendChild(tag);
+      });
+      bubbleWrap.appendChild(srcRow);
+    }
+
+    wrapper.appendChild(avatar);
+    wrapper.appendChild(bubbleWrap);
+    messagesDiv.appendChild(wrapper);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  // ── TYPING INDICATOR ───────────────────────
+  function showTyping() {
+    const messagesDiv = document.getElementById("messages");
+    const wrapper = document.createElement("div");
+    wrapper.className = "message bot";
+    wrapper.id = "typing-indicator";
+
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.textContent = "🤖";
+
+    const typingBubble = document.createElement("div");
+    typingBubble.className = "typing-bubble";
+    typingBubble.innerHTML = `<div class="dot"></div><div class="dot"></div><div class="dot"></div>`;
+
+    wrapper.appendChild(avatar);
+    wrapper.appendChild(typingBubble);
+    messagesDiv.appendChild(wrapper);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  function removeTyping() {
+    const el = document.getElementById("typing-indicator");
+    if (el) el.remove();
+  }
+
+  // ── SEND QUESTION ──────────────────────────
+  function ask(question) {
+    document.getElementById("questionInput").value = question;
+    sendQuestion();
+  }
+
+  function handleKey(e) {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendQuestion(); }
+  }
+
+  function autoResize(el) {
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 120) + "px";
+  }
+
+  async function sendQuestion() {
+    const input    = document.getElementById("questionInput");
+    const btn      = document.getElementById("sendBtn");
+    const question = input.value.trim();
+    if (!question) return;
+
+    addMessage(question, "user");
+    history.push({ role: "user", content: question });
+
+    input.value = "";
+    input.style.height = "auto";
+    btn.disabled = true;
+    showTyping();
+
+    try {
+      const res = await fetch(`${API_URL}/api/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ question, history: history.slice(0, -1) })
+      });
+
+      removeTyping();
+
+      if (res.status === 401) { logout(); return; }
+
+      if (!res.ok) {
+        const err = await res.json();
+        addMessage(`⚠️ ${err.detail}`, "bot");
+        return;
+      }
+
+      const data = await res.json();
+      history.push({ role: "assistant", content: data.answer });
+      addMessage(data.answer, "bot", data.sources, data.query_type);
+
+      // Refresh balances if it was a personal query
+      if (data.query_type !== "policy") loadLeaveBalances();
+
+    } catch (err) {
+      removeTyping();
+      addMessage("⚠️ Cannot reach the server. Please try again.", "bot");
+    } finally {
+      btn.disabled = false;
+      input.focus();
+    }
+  }
+</script>
+</body>
+</html>
