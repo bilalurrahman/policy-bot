@@ -1,6 +1,6 @@
-from sqlalchemy import create_engine, Column, Integer, String, Date, Boolean, ForeignKey, Float, text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy import create_engine, Column, Integer, String, Date, Boolean, ForeignKey, Float, DateTime, JSON
+from sqlalchemy.orm import declarative_base, sessionmaker, relationship
+from datetime import datetime
 import os
 
 # ─────────────────────────────────────────────
@@ -29,10 +29,13 @@ class Employee(Base):
     department    = Column(String(100))
     joining_date  = Column(Date)
     is_active     = Column(Boolean, default=True)
+    is_manager    = Column(Boolean, default=False)
 
     # Relationships
-    leave_balances    = relationship("LeaveBalance",     back_populates="employee")
+    leave_balances     = relationship("LeaveBalance",     back_populates="employee")
     leave_transactions = relationship("LeaveTransaction", back_populates="employee")
+    chat_sessions      = relationship("ChatSession",      back_populates="employee")
+    pending_actions    = relationship("PendingAction",    back_populates="employee", uselist=False)
 
 
 class LeaveBalance(Base):
@@ -62,6 +65,33 @@ class LeaveTransaction(Base):
     notes       = Column(String(255))
 
     employee = relationship("Employee", back_populates="leave_transactions")
+
+
+class ChatSession(Base):
+    __tablename__ = "chat_sessions"
+
+    id          = Column(Integer, primary_key=True, index=True)
+    employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False)
+    question    = Column(String,  nullable=False)
+    answer      = Column(String,  nullable=False)
+    query_type  = Column(String(20))
+    created_at  = Column(DateTime, default=datetime.utcnow)
+
+    employee = relationship("Employee", back_populates="chat_sessions")
+
+
+class PendingAction(Base):
+    __tablename__ = "pending_actions"
+
+    id          = Column(Integer, primary_key=True, index=True)
+    employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False, unique=True)
+    action_type = Column(String(50), nullable=False)
+    payload     = Column(JSON,   nullable=False)
+    status      = Column(String(100), default="awaiting_confirmation")
+    created_at  = Column(DateTime,   default=datetime.utcnow)
+    expires_at  = Column(DateTime,   nullable=False)
+
+    employee = relationship("Employee", back_populates="pending_actions")
 
 
 # ─────────────────────────────────────────────
